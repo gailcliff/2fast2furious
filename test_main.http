@@ -5,7 +5,58 @@ Accept: application/json
 
 ###
 
-GET http://127.0.0.1:8000/hello/User
+GET http://127.0.0.1:8000/team/recruits
 Accept: application/json
 
 ###
+
+POST http://localhost:8000/team/hire/tgc?experience-yrs=15&experiences=excel&experiences=cloud&experiences=swe-internship&experiences=volunteer&experiences=cloud
+Accept: application/json
+Content-Type: application/json
+
+  {
+    "member": {
+      "name": "bar",
+      "total_comp": 500000,
+      "linked_in": "https://www.link.ed",
+      "email": "m@il.f"
+    }
+  }
+
+###
+
+PUT http://127.0.0.1:8000/team/change-tc/0
+Accept: application/json
+Content-Type: application/json
+
+{
+  "total_comp": 1000000001
+}
+
+###
+
+POST http://127.0.0.1:8000/arbitrary-body
+Accept: application/json
+Content-Type: application/json
+
+{
+  "foo": 54,
+  "bar": 2.0,
+  "baz": "groove"
+}
+
+###
+
+GET http://127.0.0.1:8000/cookies
+Accept: application/json
+Content-Type: application/json
+Cookie: user-name=uzr; pwd=1234; pwd=534; pwd=918
+Api-Token: abc123
+Api-Token: def456
+Api-Token: ghi789
+
+"she sells sea shells"
+
+###
+
+GET http://127.0.0.1:8000/nf

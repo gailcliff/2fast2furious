@@ -1,9 +1,15 @@
-from fastapi import FastAPI, Query
-from typing import Annotated
+from fastapi import (
+    FastAPI, Query, Path,
+    Body, Cookie, Header,
+    Request, Response, Form, HTTPException
+)
+from fastapi.responses import RedirectResponse
+from fastapi.encoders import jsonable_encoder
+from typing import Annotated, Any
 from enum import Enum
-from datetime import datetime
+from datetime import date
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, HttpUrl, EmailStr
 
 app = FastAPI()
 
@@ -14,11 +20,16 @@ class Title(Enum):
     TECH = 'cto'
 
 
-class Recruit(BaseModel):
+class BaseRecruit(BaseModel):
     name: str
-    total_comp: int = 0
-    start_date: datetime | None = Field(default_factory=datetime.now)
-    __recruits__: list = []
+    email: EmailStr
+
+
+class Recruit(BaseRecruit):
+    linked_in: HttpUrl | None = None
+    total_comp: int = Field(gt=50000, default=70000)
+    start_date: date | None = Field(default_factory=date.today)
+    __recruits__: list['Recruit'] = []
 
     @classmethod
     def add_recruit(cls, recruit: 'Recruit'):
@@ -29,14 +40,18 @@ class Recruit(BaseModel):
         return cls.__recruits__
 
 
-@app.get("/team/ceo")
+@app.get("/team/ceo", tags=['team'], summary='ceo')
 async def get_ceo():
+    """
+    I'm CEO, bitch!
+    ~ TGC
+    """
     return {
         Title.CHIEF: "Gail Cliff"
     }
 
 
-@app.get("/team")
+@app.get("/team", tags=['team'])
 async def get_team_member(title: Annotated[Title, Query()] = None):
     return {
         title or "t": "John Doe"
@@ -48,12 +63,176 @@ async def download(file: str):
     return file
 
 
-@app.post('/team/hire')
-def recruit(member: Recruit) -> Recruit:
+@app.post('/team/hire/{app_ac_name}',
+          tags=['team'],
+          summary="we're hiring",
+          description="no bozos allowed"
+          )
+def recruit(
+            member: Annotated[Recruit, Body(embed=True)],
+            app_ac_name: Annotated[str, Path(min_length=3, max_length=7)],
+            experience_yrs: Annotated[int | None, Query(
+                title='how many years of experience do you have?',
+                description='we need at least 5 :)',
+                ge=5,
+                alias='experience-yrs',
+                deprecated=True,
+                include_in_schema=False
+            )] = None,
+            experiences: Annotated[set[str] | None, Query()] = None
+            ) -> Recruit | dict:
+    if experience_yrs is None or experiences is None or len(experiences) == 0:
+        return {
+            "sorry": f"{app_ac_name}: Inadequate experience"
+        }
     Recruit.add_recruit(member)
-    return member
+    return {
+        "member": member,
+        "experience": f"{experience_yrs} years",
+        "experiences": experiences
+    }
 
 
-@app.get('/team/recruits')
-def get_recruits() -> list[Recruit]:
+@app.get('/team/recruits', tags=['team'])
+def get_recruits() -> list[BaseRecruit]:
     return Recruit.all()
+
+
+@app.put("/team/change-tc/{member_id}", tags=['team'])
+def change_total_comp(member_id: int, total_comp: Annotated[int, Body(embed=True)]):
+    Recruit.__recruits__[member_id].total_comp = total_comp
+
+
+@app.post("/arbitrary-body")
+def body_with_dict(data: dict) -> dict:
+    return data
+
+
+@app.get('/cookies')
+def get_cookies(
+        content_type: Annotated[str, Header()],
+        content_length: Annotated[int, Header()],
+        user_name: Annotated[str, Cookie(alias='user-name')],
+        pwd: Annotated[str, Cookie()],
+        api_token: Annotated[list[str], Header()]
+):
+    return {
+        "type": content_type,
+        "len": content_length,
+        "usr": user_name,
+        "pwd": pwd,
+        "tokens": api_token
+    }
+
+
+@app.get('/teleport')
+def teleport(url: HttpUrl | None = None):
+    return RedirectResponse(url or 'https://google.com')
+
+
+@app.get('/xml')
+def get_xml():
+    content = """
+    <b>
+    TGC
+    </b>
+    <em>
+    $100B
+    </em>
+    """
+    return Response(content, media_type='text/html', headers={'CEO': 'tgc'})
+
+
+@app.get('/genders', response_model=dict[str, Any])
+def get_genders():
+    return {
+        'm': 'male',
+        'f': 'female',
+        'other': -1
+    }
+
+
+@app.get('/nf')
+def not_found():
+    raise HTTPException(status_code=404, headers={'not': 'found'}, detail="NF")
+
+
+@app.get('/team/log-in', tags=['team'])
+def get_login_page():
+    with open('page.html', 'r') as page:
+        return Response(page.read(), media_type='text/html')
+
+
+@app.post('/login')
+def log_in(username: Annotated[str, Form()], password: Annotated[str, Form()]):
+    print("password: ", password)
+    response = f"""
+    <html>
+    Welcome {username}!
+    <br>
+    You logged in successfully. <br>
+    Here's your secret key: {hash(password)}
+    </html>
+    """
+
+    return Response(content=response, media_type='text/html')
+
+
+class NFException(Exception):
+
+    def __init__(self, search_term):
+        self.search_term = search_term
+
+
+@app.exception_handler(NFException)
+def nf_exception_handler(request: Request, e: NFException):
+    content = """<html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>404 Not Found</title>
+            <style>
+                body {
+                    font-family: Arial, sans-serif;
+                    background-color: #f4f4f4;
+                    color: #333;
+                    text-align: center;
+                    padding: 50px;
+                    margin: 0;
+                }
+        
+                .container {
+                    max-width: 600px;
+                    margin: 0 auto;
+                }
+        
+                h1 {
+                    color: #e44d26;
+                }
+        
+                p {
+                    font-size: 18px;
+                }
+            </style>
+        </head>""" + f"""<body>
+            <div class="container">
+                <h1>404 Not Found</h1>
+                <p>Sorry, no search results matching '{e.search_term, request.cookies}' were found.</p>
+                <p><a href="/team/log-in">Go back to the home page</a></p>
+            </div>
+        </body>
+        </html>"""
+    return Response(content, media_type='text/html', status_code=404)
+
+
+@app.get('/search')
+def search(query: str):
+    raise NFException(query)
+
+
+@app.post("/json")
+def json_enc(p: list[BaseRecruit]):
+    foo = jsonable_encoder(p)
+    # bar = p.model_dump()
+    print(type(foo), foo)
+    # print(type(bar), bar)
