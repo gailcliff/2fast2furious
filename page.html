@@ -1,27 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login Form</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form with Custom Headers</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+        }
+
+        form {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            color: #333;
+        }
+    </style>
 </head>
 <body>
+  <div id="responseContainer">
+    <form id="myForm">
+        <header>
+            <h2>Contact Us</h2>
+            <p>Please fill out the form below to get in touch with us.</p>
+        </header>
 
-  <h2>Login Form</h2>
+        <!-- Your form fields go here -->
 
-  <form action="/login" method="post">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required>
+      <label for="username">Username:</label>
+      <input type="text" id="username" name="username" required>
 
-    <br>
+        <br>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
 
-    <br>
+        <br>
 
-    <button type="submit">Submit</button>
-  </form>
 
+        <button type="button" onclick="submitForm()">Submit</button>
+    </form>
+  </div>
+    <script>
+        function submitForm() {
+            // Get form data
+            let formData = new FormData(document.getElementById('myForm'));
+
+            // Customize your headers
+            let customHeaders = new Headers();
+            customHeaders.append('X-Sec-Token', 'hash#1234');
+            customHeaders.append('X-Sec-Key', 'key->to_the_city');
+
+            // Make a Fetch API request
+            fetch("/login", {
+                method: 'POST',
+                headers: customHeaders,
+                body: formData
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Success:', data);
+                // Handle success
+                let responseContainer = document.getElementById('responseContainer');
+
+                responseContainer.innerHTML = data;
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                // Handle error
+                let responseContainer = document.getElementById('responseContainer');
+
+                responseContainer.innerHTML = error.body.innerHTML;
+            });
+        }
+    </script>
 </body>
 </html>

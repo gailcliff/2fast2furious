@@ -54,9 +54,28 @@ Cookie: user-name=uzr; pwd=1234; pwd=534; pwd=918
 Api-Token: abc123
 Api-Token: def456
 Api-Token: ghi789
+Sec-Token: hash#1234
+Sec-Key: key->to_the_city
 
 "she sells sea shells"
 
 ###
 
 GET http://127.0.0.1:8000/nf
+
+###
+
+GET http://127.0.0.1:8000/dining-dollars/2024-01-01?name=afs&email=fas%40adf.c&password=fads'
+Accept: application/json
+
+###
+
+POST http://localhost:8000/login
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+Sec-Token: hash#1234
+Sec-Key: key->to_the_city
+
+username=usr&password=pwd
+
+
