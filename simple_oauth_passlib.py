@@ -27,7 +27,7 @@ class Journal(BaseModel):
         return cls.__journals__
 
     @classmethod
-    def get_user(cls, username: str) -> Union['Journal', None]:
+    def get(cls, username: str) -> Union['Journal', None]:
         for journal in cls.__journals__:
             if journal.username == username:
                 return journal
@@ -63,7 +63,7 @@ def get_access_token(creds: Annotated[OAuth2PasswordRequestForm, Depends()]):
     username = creds.username
     password = creds.password
 
-    journal = Journal.get_user(username)
+    journal = Journal.get(username)
     if not journal:
         raise HTTPException(status_code=404, detail="You don't exist")
     if not pwd_context.verify(password, journal.password):
@@ -89,7 +89,7 @@ def get_journal(username: str, token: Annotated[str, Depends(oauth2)]) -> Journa
     :param token: the access token
     :return:
     """
-    journal = Journal.get_user(username)
+    journal = Journal.get(username)
 
     if not journal:
         raise HTTPException(status_code=404, detail="You don't exist")
