@@ -8,6 +8,10 @@ app = FastAPI()
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2 = OAuth2PasswordBearer('access-token')
 
+"""
+Simple auth.
+"""
+
 
 class Journal(BaseModel):
     username: str
