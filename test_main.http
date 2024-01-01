@@ -93,4 +93,11 @@ Accept: application/json
 Content-Type: application/x-www-form-urlencoded
 Authorization: Bearer adminstrong123
 
+###
+
+GET http://localhost:8000/user
+Accept: application/json
+Authorization: Basic Zm9vOmJhcg==
+
+
 

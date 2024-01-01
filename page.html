@@ -56,11 +56,11 @@
 
             // Customize your headers
             let customHeaders = new Headers();
-            customHeaders.append('X-Sec-Token', 'hash#1234');
-            customHeaders.append('X-Sec-Key', 'key->to_the_city');
+            // customHeaders.append('X-Sec-Token', 'hash#1234');
+            // customHeaders.append('X-Sec-Key', 'key->to_the_city');
 
             // Make a Fetch API request
-            fetch("/login", {
+            fetch("http://127.0.0.1:8000/access-token", {
                 method: 'POST',
                 headers: customHeaders,
                 body: formData

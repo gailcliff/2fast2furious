@@ -17,12 +17,13 @@ JWT FTW !!!
 """
 
 import os
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI, Depends, HTTPException, Request, Response, BackgroundTasks
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import datetime, timedelta
 from pydantic import BaseModel, Field
 
-from typing import Annotated
+from typing import Annotated, Callable
 
 # jwt is imported from jose. make sure python-jose[cryptography] is installed in pip
 from jose import jwt, JWTError, ExpiredSignatureError
@@ -39,9 +40,6 @@ API_KEY_TTL = 300
 
 passlib_crypt_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2 = OAuth2PasswordBearer(tokenUrl='access-token')
-
-
-app = FastAPI()
 
 
 def get_token_expiry(ttl: int = API_KEY_TTL) -> datetime:
@@ -71,14 +69,49 @@ class AccessToken(BaseModel):
         }
 
 
+app = FastAPI()
+
+allowed_origins = [
+    'http://localhost:8000'
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allowed_origins,
+    allow_credentials=True,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
+
+@app.middleware('http')
+async def http_middleware(request: Request, call_next: Callable):
+    from time import time
+
+    now = lambda: round(time() * 1000)
+    curr_time = now()
+
+    response: Response = await call_next(request)
+    response.headers['X-Proc-Time'] = f"{now() - curr_time} milliseconds"
+    return response
+
+
+async def send_email(username: str, email: str):
+    import time
+    time.sleep(7)
+    print(f"Email to {username} <{email}>: thanks for your journal. Add more entries soon xoxo")
+
+
 @app.post('/journal', response_model_include={'username'})
-def insert_journal(journal: Journal) -> Journal:
+async def insert_journal(journal: Journal, tasks: BackgroundTasks) -> Journal:
     Journal.add_to_db(journal)
+    if journal.email is not None:
+        tasks.add_task(send_email, journal.username, journal.email)
     return journal
 
 
 @app.post('/access-token')
-def get_access_token(credentials: Annotated[OAuth2PasswordRequestForm, Depends()]):
+async def get_access_token(credentials: Annotated[OAuth2PasswordRequestForm, Depends()]):
     username = credentials.username
     password = credentials.password
 
@@ -96,8 +129,14 @@ def get_access_token(credentials: Annotated[OAuth2PasswordRequestForm, Depends()
     return access_token.generate()
 
 
+@app.get('/login-page')
+def get_login_page():
+    with open('page.html', 'r') as page:
+        return Response(page.read(), media_type='text/html')
+
+
 @app.get('/journal', response_model_exclude={'password'})
-def get_journal(token: Annotated[str, Depends(oauth2)]) -> Journal:
+async def get_journal(token: Annotated[str, Depends(oauth2)]) -> Journal:
     CredentialsError = HTTPException(status_code=401, detail='Invalid authorization', headers={'WWW-Authenticate': 'Bearer'})
 
     try:

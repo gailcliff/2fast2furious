@@ -3,7 +3,7 @@ from fastapi import (
     Body, Cookie, Header,
     Request, Response, Form, HTTPException, Depends
 )
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, FileResponse
 from fastapi.encoders import jsonable_encoder
 from typing import Annotated, Any
 from enum import Enum
@@ -315,3 +315,4 @@ def json_enc(p: list[BaseRecruit]):
     # bar = p.model_dump()
     print(type(foo), foo)
     # print(type(bar), bar)
+

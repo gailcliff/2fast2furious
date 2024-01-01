@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Depends
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 from typing import Union, Annotated
 
 app = FastAPI()
@@ -17,6 +17,7 @@ class Journal(BaseModel):
     username: str
     password: str  # hashed password. don't store raw passwords
     secrets: str
+    email: EmailStr | None = None
     __journals__: list['Journal'] = []
 
     @classmethod
