@@ -78,4 +78,19 @@ Sec-Key: key->to_the_city
 
 username=usr&password=pwd
 
+###
+
+POST http://localhost:8000/gen-token
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+
+username=admin&password=strong123
+
+###
+
+GET http://localhost:8000/user/34
+Accept: application/json
+Content-Type: application/x-www-form-urlencoded
+Authorization: Bearer adminstrong123
+
 
