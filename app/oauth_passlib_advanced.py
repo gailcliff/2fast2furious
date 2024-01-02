@@ -27,7 +27,7 @@ from typing import Annotated, Callable
 
 # jwt is imported from jose. make sure python-jose[cryptography] is installed in pip
 from jose import jwt, JWTError, ExpiredSignatureError
-from simple_oauth_passlib import Journal
+from .simple_oauth_passlib import Journal
 from passlib.context import CryptContext
 
 
@@ -100,6 +100,14 @@ async def send_email(username: str, email: str):
     import time
     time.sleep(7)
     print(f"Email to {username} <{email}>: thanks for your journal. Add more entries soon xoxo")
+
+
+@app.get('/secrets')
+def get_secrets():
+    return {
+        "sec_key": API_KEY,
+        "algo": API_KEY_ALGO
+    }
 
 
 @app.post('/journal', response_model_include={'username'})
