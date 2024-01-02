@@ -3,8 +3,8 @@ from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from pydantic import BaseModel, EmailStr
 from typing import Union, Annotated
+from contextlib import asynccontextmanager
 
-app = FastAPI()
 pwd_context = CryptContext(schemes=['bcrypt'], deprecated='auto')
 oauth2 = OAuth2PasswordBearer('access-token')
 
@@ -42,6 +42,35 @@ class Journal(BaseModel):
         # this method returns content that will be used to generate the access token.
         # the access token will basically be a hash of this
         return self.username + "." + self.password
+
+    @classmethod
+    def preload_journals_from_db_to_cache(cls):
+        # dummy function that simulates caching data from db
+        cls.add_to_db(Journal(username='foo', password='bar', secrets='i ate a cow'))
+        cls.add_to_db(Journal(username='john', password='doe', secrets='put some dough on his head'))
+        cls.add_to_db(Journal(username='jane', password='don', secrets='i pee while standing'))
+        cls.add_to_db(Journal(username='abc', password='123', secrets='im pretty good at math'))
+        cls.dump()
+
+    @classmethod
+    def dump(cls):
+        from pprint import pprint
+        pprint(cls.__journals__)
+
+    @classmethod
+    def clear_cache(cls):
+        del cls.__journals__
+        print("Cleared cache")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    Journal.preload_journals_from_db_to_cache()
+    yield
+    Journal.clear_cache()
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.post('/journal', response_model_include={'username'})
